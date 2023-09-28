@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Capture and Record</title>
+  </head>
+  <body>
+    <audio id="audioElement" controls>
+      <source src="sample.mp3" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+    <button id="captureAudioButton">Capture Audio</button>
+    <button id="recordButton">Start Recording</button>
+    <button id="stopRecordingButton">Stop Recording</button>
+    <button id="playRecordedButton">Play Recorded Audio</button>
+    <audio id="capturedAudio" controls></audio>
+    <audio id="recordedAudio" controls></audio>
+
+    <script>
+      const audioElement = document.getElementById("audioElement");
+      const captureAudioButton = document.getElementById("captureAudioButton");
+      const capturedAudio = document.getElementById("capturedAudio");
+      const recordButton = document.getElementById("recordButton");
+      const stopRecordingButton = document.getElementById(
+        "stopRecordingButton"
+      );
+      const playRecordedButton = document.getElementById("playRecordedButton");
+      const recordedAudio = document.getElementById("recordedAudio");
+      let mediaRecorder;
+      let audioChunks = [];
+
+      captureAudioButton.addEventListener("click", () => {
+        const audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
+
+        if (audioContext.state === "suspended") {
+          audioContext.resume();
+        }
+
+        const sourceNode = audioContext.createMediaElementSource(audioElement);
+
+        const mediaStreamDestination =
+          audioContext.createMediaStreamDestination();
+
+        sourceNode.connect(mediaStreamDestination);
+
+        const mediaStream = mediaStreamDestination.stream;
+
+        capturedAudio.srcObject = mediaStream;
+
+        capturedAudio.play().catch((error) => {
+          console.error("Error playing captured audio:", error);
+        });
+
+        mediaRecorder = new MediaRecorder(mediaStream);
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+      });
+
+      recordButton.addEventListener("click", () => {
+        audioChunks = [];
+        mediaRecorder.start();
+      });
+
+      stopRecordingButton.addEventListener("click", () => {
+        mediaRecorder.stop();
+      });
+
+      playRecordedButton.addEventListener("click", () => {
+        const recordedBlob = new Blob(audioChunks, { type: "audio/wav" });
+        const recordedAudioUrl = URL.createObjectURL(recordedBlob);
+
+        recordedAudio.src = recordedAudioUrl;
+      });
+    </script>
+  </body>
+</html>

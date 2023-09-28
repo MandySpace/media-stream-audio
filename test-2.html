@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC Audio Stream</title>
+  </head>
+  <body>
+    <button id="startButton">Start Stream</button>
+    <button id="stopButton">Stop Stream</button>
+    <audio id="audioElement" controls src="sample.mp3"></audio>
+
+    <script>
+      // Get references to HTML elements
+      const startButton = document.getElementById("startButton");
+      const stopButton = document.getElementById("stopButton");
+      const audioElement = document.getElementById("audioElement");
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+
+      // Variables for MediaStream and MediaStreamTrack
+      let audioStream;
+      let audioTrack;
+
+      // Event handler for starting the stream
+      startButton.addEventListener("click", async () => {
+        try {
+          // Create a MediaStream from the audio element
+          audioStream = audioElement.captureStream();
+          audioTrack = audioStream.getAudioTracks()[0];
+          console.log(audioTrack);
+
+          if (!navigator.mediaDevices?.enumerateDevices) {
+            console.log("enumerateDevices() not supported.");
+          } else {
+            // List cameras and microphones.
+            await navigator.mediaDevices
+              .enumerateDevices()
+              .then((devices) => {
+                console.log(devices);
+              })
+              .catch((err) => {
+                console.error(`${err.name}: ${err.message}`);
+              });
+          }
+
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Define the constraints with the exact audio input device ID
+            const constraints = {
+              audio: {
+                deviceId: { exact: audioTrack.id },
+              },
+            };
+
+            // Request access to the audio stream with the specified constraints
+            navigator.mediaDevices
+              .getUserMedia({ audio: true, video: false })
+              .then(function (stream) {
+                console.log(stream);
+                // You now have access to the audio stream from the specified device
+                // You can use the stream for various purposes (e.g., recording or streaming)
+              })
+              .catch(function (error) {
+                console.error("Error accessing audio:", error);
+              });
+          } else {
+            console.error("getUserMedia is not supported in this browser");
+          }
+
+          // Connect to a WebRTC peer or do further processing with audioTrack
+        } catch (error) {
+          console.error("Error starting audio stream:", error);
+        }
+      });
+
+      // Event handler for stopping the stream
+      stopButton.addEventListener("click", () => {
+        if (audioStream) {
+          audioTrack.stop();
+          audioStream = null;
+        }
+      });
+    </script>
+  </body>
+</html>

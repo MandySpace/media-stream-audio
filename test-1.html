@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio to MediaStream</title>
+  </head>
+  <body>
+    <audio id="audioElement" controls>
+      <source src="sample.mp3" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+    <button id="captureAudioButton">Capture Audio</button>
+    <audio id="capturedAudio" controls></audio>
+
+    <script>
+      const audioElement = document.getElementById("audioElement");
+      const captureAudioButton = document.getElementById("captureAudioButton");
+      const capturedAudio = document.getElementById("capturedAudio");
+
+      // Create an AudioContext
+
+      // Handle the "Capture Audio" button click
+      captureAudioButton.addEventListener("click", () => {
+        const audioContext = new (window.AudioContext ||
+          window.webkitAudioContext)();
+        // Create an audio source node from the <audio> element
+        const sourceNode = audioContext.createMediaElementSource(audioElement);
+
+        // Create a MediaStreamDestination
+        const mediaStreamDestination =
+          audioContext.createMediaStreamDestination();
+
+        // Connect the source node to the MediaStreamDestination
+        sourceNode.connect(mediaStreamDestination);
+
+        // Create a new MediaStream from the MediaStreamDestination
+        const mediaStream = mediaStreamDestination.stream;
+        console.log(mediaStream);
+
+        // Set the capturedMediaStream as the source of another <audio> element
+        capturedAudio.srcObject = mediaStream;
+
+        // Start playing the captured audio
+        capturedAudio.play();
+      });
+    </script>
+  </body>
+</html>
